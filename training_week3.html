@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Тренування">
+<title>Тренування · Тиждень 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #F5F4F0;
+    --card: #FFFFFF;
+    --text: #1A1A18;
+    --muted: #8A8A82;
+    --accent: #2D5A3D;
+    --accent-light: #E8F0EA;
+    --blue: #1E4A8A;
+    --blue-light: #E6EEF8;
+    --warm: #8A4E1E;
+    --warm-light: #F8EEE6;
+    --border: #E8E8E2;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* LAYOUT */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    height: -webkit-fill-available;
+  }
+
+  /* HEADER */
+  #header {
+    flex-shrink: 0;
+    background: rgba(245,244,240,0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 20px 0;
+    transition: padding 0.2s ease;
+    overflow: hidden;
+  }
+
+  #header.compact {
+    padding-top: 12px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .week-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  #header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+    transition: font-size 0.2s, margin 0.2s;
+  }
+
+  #header.compact h1 { font-size: 17px; }
+
+  #header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    transition: all 0.2s;
+    overflow: hidden;
+    max-height: 20px;
+  }
+
+  #header.compact p {
+    max-height: 0;
+    margin-bottom: 0;
+    opacity: 0;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    padding-bottom: 12px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 9px 6px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* SCROLL AREA */
+  #scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px 100px;
+  }
+
+  /* CONTENT */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .day-info {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .section { margin-bottom: 20px; }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  .exercise-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px 14px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .ex-top { display: flex; align-items: center; gap: 12px; }
+
+  .ex-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; flex-shrink: 0;
+  }
+
+  .ex-body { flex: 1; min-width: 0; }
+  .ex-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .ex-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .ex-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+
+  .ex-sets {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    color: var(--text); white-space: nowrap;
+  }
+
+  .how-btn {
+    font-size: 11px; color: var(--blue);
+    background: var(--blue-light);
+    border: none; border-radius: 6px;
+    padding: 4px 9px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500; white-space: nowrap;
+  }
+
+  .log-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .log-label {
+    font-size: 11px; color: var(--muted);
+    margin-bottom: 8px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .sets-row { display: flex; gap: 8px; align-items: center; }
+
+  .set-input-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+
+  .set-label { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  .set-input {
+    width: 100%; height: 40px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg); color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 16px; font-weight: 500;
+    text-align: center;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.15s;
+    /* Prevent iOS zoom */
+    font-size: 16px;
+  }
+  .set-input:focus { border-color: var(--accent); background: #fff; }
+  .set-input.done { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+  .tip-card {
+    background: var(--warm-light);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--warm);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* REPORT BAR */
+  #report-bar {
+    flex-shrink: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(245,244,240,0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+  }
+
+  .report-btn {
+    width: 100%; padding: 14px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s;
+    letter-spacing: -0.2px;
+  }
+  .report-btn:active { opacity: 0.85; }
+  .report-btn.copied { background: #1a7a3a; }
+
+  /* MODAL */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 100;
+    align-items: flex-end; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: 22px 22px 0 0;
+    padding: 24px 20px calc(32px + env(safe-area-inset-bottom));
+    width: 100%; max-width: 480px;
+    max-height: 84vh; overflow-y: auto;
+    animation: slideUp 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-title { font-size: 17px; font-weight: 600; color: var(--text); letter-spacing: -0.2px; }
+
+  .close-btn {
+    width: 32px; height: 32px; border-radius: 16px;
+    background: var(--bg); border: none; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; color: var(--muted); flex-shrink: 0;
+  }
+
+  .step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+
+  .step-num {
+    width: 26px; height: 26px; border-radius: 13px;
+    background: var(--accent-light); color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: 'DM Mono', monospace;
+  }
+
+  .step-text { font-size: 15px; color: var(--text); line-height: 1.55; padding-top: 3px; }
+  .modal-tip { background: var(--warm-light); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--warm); margin-top: 8px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="header-top">
+      <div class="week-tag">ТИЖДЕНЬ 3 · ФАЗА 1</div>
+    </div>
+    <h1>Тренування</h1>
+    <p>Андрій · постава і грудний відділ</p>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('a',this)">Тренув. А</button>
+      <button class="tab" onclick="switchTab('b',this)">Тренув. Б</button>
+      <button class="tab" onclick="switchTab('r',this)">Відновлення</button>
+    </div>
+  </div>
+
+  <!-- SCROLL -->
+  <div id="scroll">
+
+    <!-- ТРЕНУВАННЯ А -->
+    <div id="panel-a" class="panel active">
+      <div class="day-info">📅 Пн + Пт (або будь-які 2 дні)</div>
+
+      <div class="section">
+        <div class="section-label">Розминка</div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E6F1FB">🌀</div><div class="ex-body"><div class="ex-name">Кішка-корова</div><div class="ex-detail">Плавно, дихай на кожен рух</div></div><div class="ex-right"><div class="ex-sets">12 разів</div><button class="how-btn" onclick="openModal('Кішка-корова')">Як робити</button></div></div></div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E6F1FB">🔄</div><div class="ex-body"><div class="ex-name">Оберти плечима назад</div><div class="ex-detail">Великі кола, повільно</div></div><div class="ex-right"><div class="ex-sets">15 разів</div><button class="how-btn" onclick="openModal('Оберти плечима назад')">Як робити</button></div></div></div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E6F1FB">↕️</div><div class="ex-body"><div class="ex-name">Мобілізація шиї</div><div class="ex-detail">М'які нахили, без різких рухів</div></div><div class="ex-right"><div class="ex-sets">10 разів</div><button class="how-btn" onclick="openModal('Мобілізація шиї')">Як робити</button></div></div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Основна частина</div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">🔼</div><div class="ex-body"><div class="ex-name">Гіперекстензія</div><div class="ex-detail">Плавно · голова нейтрально</div></div><div class="ex-right"><div class="ex-sets">3 × 12</div><button class="how-btn" onclick="openModal('Гіперекстензія')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_hyperext" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_hyperext" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_hyperext" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">🎯</div><div class="ex-body"><div class="ex-name">Face pulls</div><div class="ex-detail">Жовта резинка · фокус на лопатки</div></div><div class="ex-right"><div class="ex-sets">3 × 15</div><button class="how-btn" onclick="openModal('Face pulls')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_facepulls" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_facepulls" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_facepulls" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">💪</div><div class="ex-body"><div class="ex-name">Тяга до поясу</div><div class="ex-detail">Жовта → спробуй синю</div></div><div class="ex-right"><div class="ex-sets">3 × 12</div><button class="how-btn" onclick="openModal('Тяга до поясу')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_row" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_row" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_row" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">⭕</div><div class="ex-body"><div class="ex-name">Ролик для пресу з колін</div><div class="ex-detail">Контроль попереку — не провалюй</div></div><div class="ex-right"><div class="ex-sets">3 × 6</div><button class="how-btn" onclick="openModal('Ролик для пресу з колін')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_roller" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_roller" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_roller" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">💪</div><div class="ex-body"><div class="ex-name">Згинання на біцепс</div><div class="ex-detail">Червона резинка (13.6 кг)</div></div><div class="ex-right"><div class="ex-sets">3 × 12</div><button class="how-btn" onclick="openModal('Згинання на біцепс')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_bicep" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_bicep" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_bicep" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">↗️</div><div class="ex-body"><div class="ex-name">Розгинання на трицепс</div><div class="ex-detail">Жовта резинка (4.5 кг)</div></div><div class="ex-right"><div class="ex-sets">3 × 12</div><button class="how-btn" onclick="openModal('Розгинання на трицепс')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_tricep" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_tricep" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="a_tricep" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Заминка</div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#FAEEDA">🚪</div><div class="ex-body"><div class="ex-name">Розтяжка грудей у дверях</div><div class="ex-detail">Обов'язково! Ключ до постави</div></div><div class="ex-right"><div class="ex-sets">1–2 хв</div><button class="how-btn" onclick="openModal('Розтяжка грудей у дверях')">Як робити</button></div></div></div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#FAEEDA">🌙</div><div class="ex-body"><div class="ex-name">Поза дитини</div><div class="ex-detail">Розтягни спину і плечі</div></div><div class="ex-right"><div class="ex-sets">2–3 хв</div><button class="how-btn" onclick="openModal('Поза дитини')">Як робити</button></div></div></div>
+      </div>
+      <div class="tip-card">💡 Тягові : жимові = 2:1 — ключ до виправлення сутулості</div>
+    </div>
+
+    <!-- ТРЕНУВАННЯ Б -->
+    <div id="panel-b" class="panel">
+      <div class="day-info">📅 Середа (між двома А)</div>
+
+      <div class="section">
+        <div class="section-label">Розминка</div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E6F1FB">🌀</div><div class="ex-body"><div class="ex-name">Кішка-корова</div><div class="ex-detail">Плавно, дихай на кожен рух</div></div><div class="ex-right"><div class="ex-sets">12 разів</div><button class="how-btn" onclick="openModal('Кішка-корова')">Як робити</button></div></div></div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E6F1FB">🔄</div><div class="ex-body"><div class="ex-name">Оберти плечима назад</div><div class="ex-detail">Великі кола, повільно</div></div><div class="ex-right"><div class="ex-sets">15 разів</div><button class="how-btn" onclick="openModal('Оберти плечима назад')">Як робити</button></div></div></div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E6F1FB">↕️</div><div class="ex-body"><div class="ex-name">Мобілізація шиї</div><div class="ex-detail">М'які нахили, без різких рухів</div></div><div class="ex-right"><div class="ex-sets">10 разів</div><button class="how-btn" onclick="openModal('Мобілізація шиї')">Як робити</button></div></div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Основна частина</div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">🦵</div><div class="ex-body"><div class="ex-name">Присідання з резинкою</div><div class="ex-detail">Синя резинка (9 кг) · коліна назовні</div></div><div class="ex-right"><div class="ex-sets">3 × 15</div><button class="how-btn" onclick="openModal('Присідання з резинкою')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_squat" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_squat" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_squat" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">⬆️</div><div class="ex-body"><div class="ex-name">Віджимання від підлоги</div><div class="ex-detail">Лопатки назад і вниз · ціль 13–15</div></div><div class="ex-right"><div class="ex-sets">3 × макс</div><button class="how-btn" onclick="openModal('Віджимання від підлоги')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_pushup" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_pushup" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_pushup" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">🍑</div><div class="ex-body"><div class="ex-name">Ягодичний місток</div><div class="ex-detail">Жовта резинка над колінами</div></div><div class="ex-right"><div class="ex-sets">3 × 20</div><button class="how-btn" onclick="openModal('Ягодичний місток')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_bridge" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_bridge" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_bridge" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="ex-top"><div class="ex-icon" style="background:#EAF3DE">⬆️</div><div class="ex-body"><div class="ex-name">Підйоми ніг лежачи</div><div class="ex-detail">Нижній прес · поясниця до підлоги</div></div><div class="ex-right"><div class="ex-sets">3 × 12</div><button class="how-btn" onclick="openModal('Підйоми ніг лежачи')">Як робити</button></div></div>
+          <div class="log-section"><div class="log-label">Повторень за підхід:</div><div class="sets-row"><div class="set-input-wrap"><div class="set-label">П1</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_legs" data-set="1" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П2</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_legs" data-set="2" oninput="markDone(this)"></div><div class="set-input-wrap"><div class="set-label">П3</div><input class="set-input" type="number" inputmode="numeric" min="0" max="99" placeholder="—" data-ex="b_legs" data-set="3" oninput="markDone(this)"></div></div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Заминка</div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#FAEEDA">🚪</div><div class="ex-body"><div class="ex-name">Розтяжка грудей у дверях</div><div class="ex-detail">Обов'язково! Ключ до постави</div></div><div class="ex-right"><div class="ex-sets">1–2 хв</div><button class="how-btn" onclick="openModal('Розтяжка грудей у дверях')">Як робити</button></div></div></div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#FAEEDA">🌙</div><div class="ex-body"><div class="ex-name">Поза дитини</div><div class="ex-detail">Розтягни спину і плечі</div></div><div class="ex-right"><div class="ex-sets">2–3 хв</div><button class="how-btn" onclick="openModal('Поза дитини')">Як робити</button></div></div></div>
+      </div>
+      <div class="tip-card">💡 Тягові : жимові = 2:1 — ключ до виправлення сутулості</div>
+    </div>
+
+    <!-- ВІДНОВЛЕННЯ -->
+    <div id="panel-r" class="panel">
+      <div class="day-info">📅 Вт · Чт · Сб · Нд</div>
+      <div class="section">
+        <div class="section-label">Активне відновлення</div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E1F5EE">🚴</div><div class="ex-body"><div class="ex-name">Велосипед або прогулянка</div><div class="ex-detail">30–40 хв, комфортний темп</div></div><div class="ex-right"><div class="ex-sets">30–40 хв</div></div></div></div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E1F5EE">🌙</div><div class="ex-body"><div class="ex-name">Поза дитини ввечері</div><div class="ex-detail">Знімає напругу зі спини і шиї</div></div><div class="ex-right"><div class="ex-sets">2–3 хв</div><button class="how-btn" onclick="openModal('Поза дитини')">Як робити</button></div></div></div>
+        <div class="exercise-card"><div class="ex-top"><div class="ex-icon" style="background:#E1F5EE">😴</div><div class="ex-body"><div class="ex-name">Неділя — повний відпочинок</div><div class="ex-detail">М'язи ростуть під час відновлення</div></div><div class="ex-right"><div class="ex-sets">весь день</div></div></div></div>
+      </div>
+      <div class="tip-card">💡 Відновлення — частина тренування, не пропускай</div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- REPORT BAR -->
+  <div id="report-bar">
+    <button class="report-btn" id="reportBtn" onclick="copyReport()">📋 Скопіювати звіт для тренера</button>
+  </div>
+
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div id="modal-steps"></div>
+    <div class="modal-tip" id="modal-tip"></div>
+  </div>
+</div>
+
+<script>
+const info = {
+  "Кішка-корова": { steps: ["Стань на четвереньки — зап'ястя під плечима, коліна під стегнами","Вдих: прогни спину вниз, підніми голову і куприк вгору (корова)","Видих: округли спину вгору, опусти голову і куприк вниз (кішка)","Рухайся плавно, без ривків — хребет рухається хвилею","Кожен рух — один рахунок дихання"], tip: "Фокус на грудному відділі — він найменш рухливий при сутулості" },
+  "Оберти плечима назад": { steps: ["Стій рівно, руки вздовж тіла","Підніми плечі вгору","Відведи назад — відчуй як лопатки зближуються","Опусти вниз і вперед — повне коло","Роби повільно, великими колами"], tip: "Назад і вниз — найважливіша частина руху для постави" },
+  "Мобілізація шиї": { steps: ["Сидь або стій рівно, плечі розслаблені","Повільно нахили голову вправо — вухо до плеча, 3 секунди","Поверни в центр","Те саме вліво","Потім плавно вперед-назад — без різких рухів","Ніяких кругових обертів!"], tip: "Якщо відчуваєш біль — зменши амплітуду, не через силу" },
+  "Гіперекстензія": { steps: ["Ляж на тренажер обличчям вниз — стегна на краю подушки, ноги зафіксовані","Руки схрещені на грудях або за головою","Опусти корпус вниз плавно — до паралелі з підлогою","Підніми корпус — до прямої лінії з ногами, не вище!","Затримайся на секунду вгорі, відчуй напругу в спині","Повільно опусти — 3 секунди вниз, 1 секунда вгорі"], tip: "Голова нейтрально — не закидай назад! Уяви що тримаєш апельсин підборіддям" },
+  "Face pulls": { steps: ["Закріпи резинку в дверному якорі на рівні очей","Відійди на крок-два, тримай ручки нейтральним хватом","Потягни ручки до обличчя — лікті розходяться в сторони і вгору","В кінці руху — лопатки зводяться разом і вниз","Затримайся 1 секунду, відчуй напругу між лопатками","Повільно поверни руки вперед — не відпускай різко"], tip: "Лікті мають бути вище зап'ясть в кінцевій точці — це ключ до правильної техніки" },
+  "Тяга до поясу": { steps: ["Закріпи резинку внизу дверного якоря або притисни ногами","Нахились вперед під кутом ~45°, спина рівна","Тримай ручки нейтральним хватом, руки прямі","Потягни ручки до поясу — лікті вздовж тіла назад","Відчуй як лопатки зводяться — затримайся 1 секунду","Повільно поверни руки вперед"], tip: "Не горби спину! Якщо важко тримати поставу — зменш вагу резинки" },
+  "Ролик для пресу з колін": { steps: ["Стань на коліна, ролик перед тобою","Руки на ролику, спина рівна — нейтральне положення хребта","Повільно котись вперед — тіло витягується в пряму лінію","Стіна попереду обмежує рух — торкнись і зупинись","Напружи прес і повернись назад — не прогинай поперек!","Видих при поверненні назад"], tip: "Якщо поперек провалюється — це стоп-сигнал. Краще менше повторень але з контролем" },
+  "Згинання на біцепс": { steps: ["Встань на резинку, тримай ручки супінованим хватом (долоні вгору)","Руки вздовж тіла, лікті притиснуті до тулуба","Згинай руки вгору — тільки передпліччя рухається, лікоть нерухомий","Вгорі затримайся 1 секунду — стисни біцепс","Повільно опускай — 3 секунди вниз","Не розгойдуй корпус!"], tip: "Повільний опуск (негативна фаза) — де 70% росту м'яза. Не кидай руки вниз" },
+  "Розгинання на трицепс": { steps: ["Закріпи резинку вгорі дверного якоря","Стань обличчям до дверей, злегка нахились вперед","Тримай ручки перед собою, лікті біля тулуба","Розгинай руки вниз — тільки передпліччя рухається","Внизу повністю випрями руки — відчуй трицепс","Повільно зігни назад — 3 секунди"], tip: "Лікті нерухомі — вони як точка опори. Якщо розходяться — зменш вагу" },
+  "Присідання з резинкою": { steps: ["Встань на резинку, ноги на ширині плечей або ширше","Тримай ручки на рівні плечей або схрести перед грудьми","Відведи таз назад і вниз — ніби сідаєш на стілець","Коліна назовні — вздовж лінії пальців ніг","Опустись до паралелі з підлогою або нижче","Встань, тиснучи п'ятами в підлогу"], tip: "Коліна не заваляться всередину — найчастіша помилка. Стеж за цим в дзеркалі" },
+  "Віджимання від підлоги": { steps: ["Упор лежачи — руки трохи ширше плечей","Лопатки зведи назад і вниз — не горби плечі до вух","Тіло — пряма лінія від голови до п'ят, напружи прес","Опускайся до підлоги — груди майже торкаються","Відтисни себе вгору — видих на зусиллі","Не прогинай поперек і не підіймай таз"], tip: "Для постави: в нижній точці відчуй розтяжку грудей, нагорі — стисни лопатки" },
+  "Ягодичний місток": { steps: ["Ляж на спину, коліна зігнуті, стопи на підлозі","Одягни резинку трохи вище колін","Розведи коліна назовні — натискай на резинку","Підніми таз вгору — стисни сідниці в верхній точці","Тіло — пряма лінія від плечей до колін","Повільно опусти таз майже до підлоги — і знову вгору"], tip: "Якщо відчуваєш напругу в попереку — значить сідниці не працюють. Стисни їх сильніше" },
+  "Підйоми ніг лежачи": { steps: ["Ляж на спину, руки вздовж тіла або під сідницями","Притисни поперек до підлоги — це критично важливо!","Підніми прямі ноги до кута 90°","Повільно опускай ноги вниз — не торкаючись підлоги","Поперек весь час притиснутий — якщо відривається, зупинись вище","Видих при підйомі, вдих при опусканні"], tip: "Якщо поперек відривається — зменши амплітуду, це важливо для безпеки" },
+  "Розтяжка грудей у дверях": { steps: ["Стань у дверному отворі, підніми руки до кута 90°","Передпліччя притисни до одвірка з обох сторін","Зроби крок вперед — відчуй розтяжку в грудях","Лопатки зводяться разом — груди йдуть вперед","Тримай позицію, дихай рівно","Можна змінювати висоту рук щоб розтягнути різні частини грудей"], tip: "Обов'язково після кожного тренування! Найважливіша вправа для виправлення сутулості" },
+  "Поза дитини": { steps: ["Стань на коліна, сядь на п'яти","Потягнись руками вперед по підлозі","Лоб опусти на підлогу або килимок","Відчуй як розтягується вся спина — від шиї до куприка","Дихай глибоко — на видиху розслабляйся глибше","Можна розсунути коліна ширше для розтяжки стегон"], tip: "Це не просто заминка — це активне відновлення хребта після навантаження" }
+};
+
+const exNames = {
+  a_hyperext:"Гіперекстензія", a_facepulls:"Face pulls",
+  a_row:"Тяга до поясу", a_roller:"Ролик для пресу з колін",
+  a_bicep:"Згинання на біцепс", a_tricep:"Розгинання на трицепс",
+  b_squat:"Присідання з резинкою", b_pushup:"Віджимання від підлоги",
+  b_bridge:"Ягодичний місток", b_legs:"Підйоми ніг лежачи"
+};
+
+// Compact header on scroll
+const scrollEl = document.getElementById('scroll');
+const header = document.getElementById('header');
+scrollEl.addEventListener('scroll', () => {
+  header.classList.toggle('compact', scrollEl.scrollTop > 40);
+});
+
+// Hide report bar when keyboard is open
+let lastHeight = window.innerHeight;
+window.addEventListener('resize', () => {
+  const current = window.innerHeight;
+  const bar = document.getElementById('report-bar');
+  bar.style.display = current < lastHeight * 0.85 ? 'none' : '';
+  lastHeight = current;
+});
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+  scrollEl.scrollTop = 0;
+}
+
+function markDone(el) {
+  el.classList.toggle('done', el.value !== '');
+}
+
+function copyReport() {
+  const inputs = document.querySelectorAll('.set-input');
+  const data = {};
+  inputs.forEach(inp => {
+    const ex = inp.dataset.ex;
+    const set = inp.dataset.set;
+    if (!data[ex]) data[ex] = {};
+    data[ex][set] = inp.value || '—';
+  });
+
+  const today = new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
+  let report = `📊 ЗВІТ ТРЕНУВАННЯ\nТиждень 3 · ${today}\n\n`;
+
+  const aExs = ['a_hyperext','a_facepulls','a_row','a_roller','a_bicep','a_tricep'];
+  const bExs = ['b_squat','b_pushup','b_bridge','b_legs'];
+
+  const hasA = aExs.some(k => data[k] && Object.values(data[k]).some(v => v !== '—'));
+  const hasB = bExs.some(k => data[k] && Object.values(data[k]).some(v => v !== '—'));
+
+  if (hasA) {
+    report += '🅐 ТРЕНУВАННЯ А (Спина · Корпус · Руки)\n';
+    aExs.forEach(key => {
+      if (data[key] && Object.values(data[key]).some(v => v !== '—')) {
+        const sets = [data[key]['1']||'—', data[key]['2']||'—', data[key]['3']||'—'];
+        report += `• ${exNames[key]}: ${sets.join(' / ')}\n`;
+      }
+    });
+    report += '\n';
+  }
+
+  if (hasB) {
+    report += '🅑 ТРЕНУВАННЯ Б (Ноги · Груди · Корпус)\n';
+    bExs.forEach(key => {
+      if (data[key] && Object.values(data[key]).some(v => v !== '—')) {
+        const sets = [data[key]['1']||'—', data[key]['2']||'—', data[key]['3']||'—'];
+        report += `• ${exNames[key]}: ${sets.join(' / ')}\n`;
+      }
+    });
+    report += '\n';
+  }
+
+  if (!hasA && !hasB) report += '(дані не введені)\n\n';
+  report += '---\nЯк відчуття після тренування: ';
+
+  navigator.clipboard.writeText(report).then(() => {
+    const btn = document.getElementById('reportBtn');
+    btn.textContent = '✅ Скопійовано! Вставляй в чат';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Скопіювати звіт для тренера';
+      btn.classList.remove('copied');
+    }, 3000);
+  }).catch(() => {
+    alert('Скопіюй вручну:\n\n' + report);
+  });
+}
+
+function openModal(name) {
+  const d = info[name];
+  if (!d) return;
+  document.getElementById('modal-title').textContent = name;
+  document.getElementById('modal-steps').innerHTML = d.steps.map((s,i) =>
+    `<div class="step"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`
+  ).join('');
+  document.getElementById('modal-tip').textContent = '💡 ' + d.tip;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+</script>
+</body>
+</html>
