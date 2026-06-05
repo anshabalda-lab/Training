@@ -176,6 +176,31 @@
   .step-num { width: 26px; height: 26px; border-radius: 13px; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'DM Mono', monospace; }
   .step-text { font-size: 15px; color: var(--text); line-height: 1.55; padding-top: 3px; }
   .modal-tip { background: var(--warm-light); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--warm); margin-top: 8px; line-height: 1.5; }
+
+  /* TIMER */
+  #timer-btn {
+    flex-shrink: 0;
+    width: 52px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    transition: background 0.2s;
+    line-height: 1.2;
+  }
+  #timer-btn.running { background: var(--warm); }
+  #timer-btn.done { background: #1a7a3a; }
+  #timer-icon { font-size: 15px; }
 </style>
 </head>
 <body>
@@ -259,8 +284,16 @@
   </div><!-- /scroll -->
 
   <div id="report-bar">
-    <div style="display:flex;gap:8px;align-items:center"><button class="report-btn" id="reportBtn" onclick="copyReport()" style="flex:1">📋 Скопіювати звіт</button><button onclick="resetData()" style="flex-shrink:0;width:44px;height:44px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Скинути всі дані">🗑️</button></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="timer-btn" onclick="toggleTimer()">
+        <span id="timer-icon">⏱</span>
+        <span id="timer-text">90s</span>
+      </button>
+      <button class="report-btn" id="reportBtn" onclick="copyReport()" style="flex:1;font-size:13px;padding:12px 10px">📋 Звіт</button>
+      <button onclick="resetData()" style="flex-shrink:0;width:44px;height:44px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">🗑️</button>
+    </div>
   </div>
+
 
 </div><!-- /app -->
 
@@ -278,6 +311,107 @@
 </div>
 
 <script>
+
+
+// Web Audio — працює на iOS Safari
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playSound(type = 'done') {
+  try {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const sounds = {
+      tick: [[880, 0.05, 'sine', 0.1]],
+      done: [[523, 0.15, 'sine', 0.1], [659, 0.15, 'sine', 0.15], [784, 0.3, 'sine', 0.2]],
+      set: [[440, 0.08, 'sine', 0.08]],
+    };
+
+    const notes = sounds[type] || sounds.done;
+    let time = audioCtx.currentTime;
+    notes.forEach(([freq, vol, wave, dur]) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = wave;
+      osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(vol, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+      osc.start(time);
+      osc.stop(time + dur);
+      time += dur * 0.8;
+    });
+  } catch(e) {}
+}
+
+// Haptic feedback
+function haptic(type = 'light') {
+  try {
+    if (window.navigator && window.navigator.vibrate) {
+      const patterns = { light: 10, medium: 20, success: [10, 50, 10], error: [20, 50, 20] };
+      window.navigator.vibrate(patterns[type] || 10);
+    }
+  } catch(e) {}
+}
+
+// Timer
+let timerInterval = null;
+let timerSeconds = 0;
+const TIMER_DURATION = 90;
+
+function toggleTimer() {
+  haptic('medium');
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerSeconds = 0;
+    updateTimerUI();
+    document.getElementById('timer-btn').className = '';
+    return;
+  }
+  timerSeconds = TIMER_DURATION;
+  document.getElementById('timer-btn').className = 'running';
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerUI();
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      document.getElementById('timer-btn').className = 'done';
+      document.getElementById('timer-icon').textContent = '✅';
+      document.getElementById('timer-text').textContent = 'GO!';
+      haptic('success');
+      playSound('done');
+      setTimeout(() => {
+        timerSeconds = 0;
+        document.getElementById('timer-btn').className = '';
+        updateTimerUI();
+      }, 2000);
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const btn = document.getElementById('timer-btn');
+  const icon = document.getElementById('timer-icon');
+  const text = document.getElementById('timer-text');
+  if (timerSeconds <= 0) {
+    icon.textContent = '⏱';
+    text.textContent = '90s';
+  } else {
+    icon.textContent = timerSeconds <= 10 ? '🔴' : '⏱';
+    text.textContent = timerSeconds + 's';
+  }
+}
+
 const STORAGE_KEY = 'training_w5';
 
 const info = {
@@ -326,8 +460,11 @@ function loadData() {
 }
 
 function onInput(el) {
+  const wasDone = el.classList.contains('done');
   el.classList.toggle('done', el.value !== '');
   saveData();
+  haptic('light');
+  if (!wasDone && el.value !== '') playSound('set');
 }
 
 // --- Toast ---
@@ -355,11 +492,13 @@ window.addEventListener('resize', () => {
 });
 
 function switchTab(id, btn) {
+  initAudio();
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   btn.classList.add('active');
   scrollEl.scrollTop = 0;
+  haptic('light');
 }
 
 // --- Report ---
@@ -416,6 +555,8 @@ function copyReport() {
     btn.textContent = '✅ Скопійовано! Вставляй в чат';
     btn.classList.add('copied');
     showToast('✅ Звіт скопійовано!');
+    haptic('success');
+    playSound('set');
     setTimeout(() => { btn.textContent = '📋 Скопіювати звіт для тренера'; btn.classList.remove('copied'); }, 3000);
   }).catch(() => { alert('Скопіюй вручну:\n\n' + report); });
 }
@@ -437,6 +578,7 @@ function resetData() {
   if (!resetPending) {
     resetPending = true;
     showToast("🗑️ Натисни ще раз для скидання");
+    haptic('medium');
     resetTimer = setTimeout(() => { resetPending = false; }, 3000);
     return;
   }
@@ -448,6 +590,7 @@ function resetData() {
     inp.classList.remove("done");
   });
   showToast("✅ Дані скинуто");
+  haptic('success');
 }
 
 // Load saved data on start
